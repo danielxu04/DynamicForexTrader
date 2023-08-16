@@ -1,0 +1,5 @@
+# OANDA API secrets
+oanda.cfg
+
+# Virtual environment
+.venv
