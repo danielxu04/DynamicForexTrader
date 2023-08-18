@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import time
 
 class Trader(tpqoa.tpqoa):
-    def __init__(self, conf_file, instrument, bar_length, units, window, duration):
+    def __init__(self, conf_file, instrument, bar_length, units, duration):
         super().__init__(conf_file)
         self.instrument = instrument
         self.bar_length = pd.to_timedelta(bar_length)
@@ -18,10 +18,11 @@ class Trader(tpqoa.tpqoa):
         self.units = units
         self.position = 0
         self.profits = []
-        self.window = window
+        self.duration = duration
 
         self.start_trade_session()
     
+    # Begins trading session with error catching
     def start_trade_session(self, days=5, max_attempts=None, sleep_period=15, sleep_increase=0):
         attempt = 0
         success = False
@@ -55,10 +56,11 @@ class Trader(tpqoa.tpqoa):
                         sleep_period += sleep_increase
                         self.tick_data = pd.DataFrame()
 
+    # Get recent data, with specified time interval
     def get_most_recent(self, days=5):
         time.sleep(1)
-        print('*' * 50)
-        print('ATTEMPTING TO MERGE')
+        print('-' * 50)
+        print('ATTEMPTING TO MERGE...')
         print('REQUIRE UNDER {} SECONDS'.format(self.bar_length.seconds))
         now = datetime.utcnow()
         now = now - timedelta(microseconds=now.microsecond)
@@ -75,8 +77,14 @@ class Trader(tpqoa.tpqoa):
             .to_frame()
         )
         df.rename(columns = {'c':self.instrument}, inplace=True)
+        low = df.resample(self.bar_length, label='right').min().dropna()
+        high = df.resample(self.bar_length, label='right').max().dropna()
         df = df.resample(self.bar_length, label='right').last().dropna().iloc[:-1]
+        
         self.raw_data = df.copy()
+        self.raw_data['High'] = high
+        self.raw_data['Low'] = low
+        # print(self.raw_data)
         self.last_bar = self.raw_data.index[-1]
         
         print('Seconds: {}'.format((datetime.utcnow() - self.last_bar).seconds))
@@ -86,7 +94,7 @@ class Trader(tpqoa.tpqoa):
             self.get_most_recent()
         else:
             print('SUCCESSFULLY MERGED')
-            print('*' * 50)
+            print('-' * 50)
 
     def close_position(self):
         if self.position == 1:
@@ -108,6 +116,7 @@ class Trader(tpqoa.tpqoa):
         print('\nSESSION OVER')
         self.position = 0
 
+    # End the trading session
     def end_trade_session(self):
         self.stop_stream = True
 
@@ -124,7 +133,7 @@ class Trader(tpqoa.tpqoa):
 
     def on_success(self, time, bid, ask):
         recent_tick = pd.to_datetime(time).replace(tzinfo=None)
-        print(self.ticks, end=' ')
+        print(self.ticks, end='\r', flush=True)
         if recent_tick >= self.end:
             self.end_trade_session()
             return
@@ -138,22 +147,22 @@ class Trader(tpqoa.tpqoa):
             self.execute_trades()
     
     def resample_and_join(self):
+        temp = self.tick_data.resample(self.bar_length, label="right").last().ffill().iloc[:-1]
+        temp['High'] = self.tick_data.resample(self.bar_length, label='right').max().dropna()
+        temp['Low'] = self.tick_data.resample(self.bar_length, label='right').min().dropna()
         self.raw_data = pd.concat([
             self.raw_data, 
-            self.tick_data.resample(self.bar_length, label="right").last().ffill().iloc[:-1]
+            temp
         ])
         self.tick_data = self.tick_data.iloc[-1:]
+        # print(self.raw_data)
         self.last_bar = self.raw_data.index[-1]
     
-    def define_strategy(self): # "strategy-specific"
+    def define_strategy(self):
         df = self.raw_data.copy()
-        
-        #******************** define your strategy here ************************
-        df["returns"] = np.log(df[self.instrument] / df[self.instrument].shift())
-        df["position"] = -np.sign(df.returns.rolling(self.window).mean())
-        #***********************************************************************
-        
+        df['position'] = 0
         self.data = df.copy()
+        pass
     
     def execute_trades(self):
         if self.data['position'].iloc[-1] == 1:
@@ -187,15 +196,16 @@ class Trader(tpqoa.tpqoa):
                 print('STAYING NEUTRAL')
             self.position = 0
     
+    # Print out trade statistics
     def report_trade(self, order, going):
-        time = order["time"]
-        units = order["units"]
-        price = order["price"]
-        pl = float(order["pl"])
+        time = order['time']
+        units = order['units']
+        price = order['price']
+        pl = float(order['pl'])
         self.profits.append(pl)
         cumpl = sum(self.profits)
-        print("\n" + 50* '*')
-        print("{} | {}".format(time, going))
-        print("{} | Units = {} | Price = {} | P&L = {} | Cumulative P&L = {}".format(time, units, price, pl, cumpl))
-        print(50 * '*' + "\n")  
+        print('\n' + 50* '-')
+        print('{} | {}'.format(time, going))
+        print('{} | Units = {} | Price = {} | P&L = {} | Cumulative P&L = {}'.format(time, units, price, pl, cumpl))
+        print(50 * '-' + '\n')  
     
