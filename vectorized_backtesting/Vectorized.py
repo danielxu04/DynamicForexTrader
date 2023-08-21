@@ -1,9 +1,9 @@
 import string
 import numpy as np
 import matplotlib.pyplot as plt
-
-from util import Instrument
-
+import sys
+sys.path.insert(1, '../utilities')
+import Instrument
 Instrument = Instrument.Instrument
 
 plt.style.use("seaborn-v0_8")
@@ -43,36 +43,37 @@ class Vectorized:
             self._instrument.get_end(),
         )
 
-    # Overriden
+    # Overriden method
     def test_strategy(self):
-        data = self._data.copy().dropna()
-        data["log_returns"] = np.log(data.price / data.price.shift(1))
-        data["position"] = np.sign(data["log_returns"].rolling(1).mean()).mul(-1)
-        data["strategy"] = data["position"].shift(1) * data["log_returns"]
-        data.dropna(inplace=True)
+        # data = self._data.copy().dropna()
+        # data["log_returns"] = np.log(data.price / data.price.shift(1))
+        # data["position"] = np.sign(data["log_returns"].rolling(1).mean()).mul(-1)
+        # data["strategy"] = data["position"].shift(1) * data["log_returns"]
+        # data.dropna(inplace=True)
 
-        # determine the number of trades in each bar
-        data["trades"] = data.position.diff().fillna(0).abs()
+        # # determine the number of trades in each bar
+        # data["trades"] = data.position.diff().fillna(0).abs()
 
-        # subtract transaction/trading costs from pre-cost return
-        data.strategy = data.strategy - data.trades * self.tc
+        # # subtract transaction/trading costs from pre-cost return
+        # data.strategy = data.strategy - data.trades * self.tc
 
-        data["creturns"] = data["log_returns"].cumsum().apply(np.exp)
-        data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
-        self.results = data
+        # data["creturns"] = data["log_returns"].cumsum().apply(np.exp)
+        # data["cstrategy"] = data["strategy"].cumsum().apply(np.exp)
+        # self.results = data
 
-        perf = data["cstrategy"].iloc[-1]  # absolute performance of the strategy
-        outperf = perf - data["creturns"].iloc[-1]  # out-/underperformance of strategy
+        # perf = data["cstrategy"].iloc[-1]  # absolute performance of the strategy
+        # outperf = perf - data["creturns"].iloc[-1]  # out-/underperformance of strategy
 
-        return round(perf, 6), round(outperf, 6)
+        # return round(perf, 6), round(outperf, 6)
+        return
 
-    # Plots results of strategy, compares to buy/hold
+    # PLOT_RESULTS - Plots results of strategy, compares to buy/hold
     def plot_results(self):
         if self.results is None:
             print("Run test_strategy() first.")
         else:
-            title = "{} | TC = {}".format(self._instrument.get_ticker(), self.tc)
-            self.results[["creturns", "cstrategy"]].plot(title=title, figsize=(12, 8))
+            title = "{} Returns with TC = {}".format(self._instrument.get_ticker(), self.tc)
+            self.results[["Strategy Cumulative Returns", "Standard Cumulative Returns"]].plot(title=title, figsize=(12, 8))
     
     # HIT_RATIO - returns proportion of profitable trades
     def hit_ratio(self):
