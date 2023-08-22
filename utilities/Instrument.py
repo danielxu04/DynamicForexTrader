@@ -43,7 +43,7 @@ class Instrument:
 
     def get_data(self):
         if self.source_file is None:
-            data = yf.download(self._ticker, self._start, self._end, interval=self.granularity).Close.to_frame()
+            data = yf.download(self._ticker, self._start, self._end, interval=self.granularity, progress=False).Close.to_frame()
             data.rename(columns={"Close": "price"}, inplace=True)
         else:
             data = pd.read_csv(self.source_file, parse_dates=["time"], index_col="time")
