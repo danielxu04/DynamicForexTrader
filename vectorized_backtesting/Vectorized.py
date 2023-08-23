@@ -1,4 +1,3 @@
-import string
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -20,7 +19,7 @@ plt.style.use("seaborn-v0_8")
         # tc: float
         #     proportional transaction/trading costs per trade
 class Vectorized:
-    def __init__(self, symbol: string, start: string, end: string, tc: float, granularity: string="1d"):
+    def __init__(self, symbol, start, end, tc, granularity='1d'):
         self.results_overview = None
         self.tc = tc
         self.results = None
