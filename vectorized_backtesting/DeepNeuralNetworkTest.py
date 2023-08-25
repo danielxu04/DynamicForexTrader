@@ -42,6 +42,7 @@ class DeepNeuralNetworkTest(Vectorized.Vectorized):
         df['Rolling Min'] = (df['Price'].rolling(self.window).min() / df['Price']) - 1
         df['Rolling Max'] = (df['Price'].rolling(self.window).max() / df['Price']) - 1
         # Momentum
+        df['Momentum'] = df['Returns'].rolling(WINDOW).mean()
         change = df['Price'].diff()
         df['RSI'] = 100 - (100 / (1 + (change.mask(change < 0, 0.0).rolling(self.rsi_window).mean() / -change.mask(change > 0, -0.0).rolling(self.rsi_window).mean())))
         # Volatility
@@ -50,7 +51,7 @@ class DeepNeuralNetworkTest(Vectorized.Vectorized):
 
         # ------------------------------------ MODEL PREDICTION ---------------------------------------
         columns = []
-        features = ['Returns', 'Direction', 'MACD', 'SMA Crossover', 'Mean Reversion', 'Rolling Min', 'Rolling Max', 'RSI', 'Volatility']
+        features = ['Returns', 'Direction', 'MACD', 'SMA Crossover', 'Mean Reversion', 'Rolling Min', 'Rolling Max', 'Momentum', 'RSI', 'Volatility']
 
         for feature in features:
             for lag in range(1, self.lags + 1):

@@ -21,18 +21,18 @@ def cw(df):
 optimizer = Adam(learning_rate = 0.0001)
 
 # 2 layers, 100 nodes by default
-def create_model(hl = 2, hu = 100, dropout = False, rate = 0.3, regularize = False,
-                 reg = l1(0.0005), optimizer = optimizer, input_dim = None):
+def create_model(hl=2, hu=100, dropout=False, rate=0.3, regularize=False,
+                 reg=l1(0.0005), optimizer=optimizer, input_dim=None):
     if not regularize:
         reg = None
     model = Sequential()
-    model.add(Dense(hu, input_dim = input_dim, activity_regularizer = reg ,activation = "relu"))
+    model.add(Dense(hu, input_dim=input_dim, activity_regularizer=reg, activation='relu'))
     if dropout: 
-        model.add(Dropout(rate, seed = 100))
+        model.add(Dropout(rate, seed=100))
     for layer in range(hl):
-        model.add(Dense(hu, activation = "relu", activity_regularizer = reg))
+        model.add(Dense(hu, activation='relu', activity_regularizer=reg))
         if dropout:
             model.add(Dropout(rate, seed = 100))
-    model.add(Dense(1, activation = "sigmoid"))
-    model.compile(loss = "binary_crossentropy", optimizer = optimizer, metrics = ["accuracy"])
+    model.add(Dense(1, activation = 'sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
     return model
