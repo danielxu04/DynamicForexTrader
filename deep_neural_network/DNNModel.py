@@ -21,7 +21,7 @@ def cw(df):
 optimizer = Adam(learning_rate = 0.0001)
 
 # 2 layers, 100 nodes by default
-def create_model(hl=2, hu=100, dropout=False, rate=0.3, regularize=False,
+def create_model(hl=3, hu=50, dropout=False, rate=0.3, regularize=False,
                  reg=l1(0.0005), optimizer=optimizer, input_dim=None):
     if not regularize:
         reg = None

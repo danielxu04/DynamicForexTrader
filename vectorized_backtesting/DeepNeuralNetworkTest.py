@@ -42,7 +42,7 @@ class DeepNeuralNetworkTest(Vectorized.Vectorized):
         df['Rolling Min'] = (df['Price'].rolling(self.window).min() / df['Price']) - 1
         df['Rolling Max'] = (df['Price'].rolling(self.window).max() / df['Price']) - 1
         # Momentum
-        df['Momentum'] = df['Returns'].rolling(WINDOW).mean()
+        df['Momentum'] = df['Returns'].rolling(self.window).mean()
         change = df['Price'].diff()
         df['RSI'] = 100 - (100 / (1 + (change.mask(change < 0, 0.0).rolling(self.rsi_window).mean() / -change.mask(change > 0, -0.0).rolling(self.rsi_window).mean())))
         # Volatility
@@ -63,11 +63,12 @@ class DeepNeuralNetworkTest(Vectorized.Vectorized):
         standardized_df = (df - self.mean) / self.std
 
         df['Probability'] = self.model.predict(standardized_df[columns])
+        df['Probability'] = df['Probability'].rolling(50).mean()
 
         # If probability < 0.48, go short
-        df['position'] = np.where(df['Probability'] < 0.48, -1, np.nan)
+        df['position'] = np.where(df['Probability'] < 0.475, -1, np.nan)
         # If probability > 0.52, go long
-        df['position'] = np.where(df['Probability'] > 0.52, 1, df['position'])
+        df['position'] = np.where(df['Probability'] > 0.535, 1, df['position'])
         # Otherwise, either forward fill or go neutral
         df['position'] = df['position'].ffill().fillna(0)
 
