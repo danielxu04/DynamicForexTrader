@@ -8,7 +8,15 @@ If you decide to clone the repository, please run:
 ```PowerShell
 pip install -r requirements.txt 
 ```
-to download the required libraries for the project.
+to download the required libraries for the project. <br /><br />
+
+Also, you will need to create an Oanda configuration file, named ```oanda.cfg``` which is filled with your account and API key information. It should be structured as follows: 
+```
+[oanda]
+account_id = XXX-XXX-XXXXXXXX-XXX
+access_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+account_type = practice (default) or live
+```
 
 
 
